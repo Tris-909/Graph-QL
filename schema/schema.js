@@ -98,6 +98,15 @@ const RootQuery = new graphql.GraphQLObjectType({
                 });
             }
         },
+        users: {
+            type: graphql.GraphQLList(UserType),
+            resolve(parent, args) {
+                return userData;
+            }
+        },
+
+
+        
         hobby: {
             type: HobbyTypes,
             args: {
@@ -109,6 +118,14 @@ const RootQuery = new graphql.GraphQLObjectType({
                  });
             }
         },
+        hobbies: {
+            type: graphql.GraphQLList(HobbyTypes),
+            resolve(parent, args) {
+                return hobbyData
+            }
+        },
+
+
         post: {
             type: PostType,
             args: {
@@ -119,11 +136,17 @@ const RootQuery = new graphql.GraphQLObjectType({
                     id: args.id
                 });
             }
+        },
+        posts: {
+            type: graphql.GraphQLList(PostType),
+            resolve(parent, args) {
+                return postData
+            }
         }
     }
 });
 
-// Mutations
+//! Mutations
 const Mutation = new graphql.GraphQLObjectType({
     name: 'Mutation',
     fields: () => ({

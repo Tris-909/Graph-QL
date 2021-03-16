@@ -70,6 +70,25 @@ const RootQuery = new graphql.GraphQLObjectType({
                     id: parent.id
                 });
             }
+        },
+        Users: {
+            type: graphql.GraphQLList(UserType),
+            resolve(parent, args) {
+                return UserDataFromDatabaseThatIDontHaveItRightNow;
+            }
+        },
+        JobListOfAUser: {
+            type: graphql.GraphQLList(JobItemType),
+            args: {
+                userId: {type: graphql.GraphQLID}
+            },
+            resolve(parent, args) {
+                const jobList = _.find(JobListItemData, {
+                    userId: args.userId
+                });
+
+                return jobList;
+            }
         }
     }
 });
