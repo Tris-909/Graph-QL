@@ -19,7 +19,7 @@ let hobbyData = [
 let postData = [
     {id: '1', comment: 'Comment 1', userId: '1'},
     {id: '2', comment: 'Comment 2', userId: '2'},
-    {id: '3', comment: 'Comment 3', userId: '3'},
+    {id: '3', comment: 'Comment 3', userId: '1'},
     {id: '4', comment: 'Comment 4', userId: '4'},
     {id: '5', comment: 'Comment 5', userId: '5'}
 ];
@@ -27,18 +27,34 @@ let postData = [
 const UserType = new graphql.GraphQLObjectType({
     name: "UserType",
     description: "Model for User Schema",
-    fields: {
+    fields: () => ({
         id: {type: graphql.GraphQLID},
         name: {type: graphql.GraphQLString},
         age: {type: graphql.GraphQLInt},
-        job: {type: graphql.GraphQLString}
-    }    
+        job: {type: graphql.GraphQLString},
+        posts: {
+            type: graphql.GraphQLList(PostType),
+            resolve(parent, args) {
+                return _.filter(postData, {
+                    userId: parent.id
+                });
+            }
+        },
+        hobbies: {
+            type: graphql.GraphQLList(HobbyTypes),
+            resolve(parent, args) {
+                return _.filter(hobbyData, {
+                    userId: parent.id
+                });
+            }
+        }
+    })
 });
 
 const HobbyTypes = new graphql.GraphQLObjectType({
     name: 'HobbyType',
     description: "Model for HobbyType",
-    fields: {
+    fields:() => ({
         id: {type: graphql.GraphQLID},
         title: {type: graphql.GraphQLString},
         description: {type: graphql.GraphQLString},
@@ -50,13 +66,13 @@ const HobbyTypes = new graphql.GraphQLObjectType({
                 });
             }
         }
-    }
+    })
 });
 
 const PostType = new graphql.GraphQLObjectType({
     name: "PostType",
     description: "Model for PostType",
-    fields: {
+    fields: () => ({
         id: {type: graphql.GraphQLID},
         comment: {type: graphql.GraphQLString},
         user: {
@@ -65,7 +81,7 @@ const PostType = new graphql.GraphQLObjectType({
                 return _.find(userData, { id: parent.userId })
             }
         }
-    }
+    })
 });
 
 const RootQuery = new graphql.GraphQLObjectType({
