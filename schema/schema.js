@@ -123,6 +123,67 @@ const RootQuery = new graphql.GraphQLObjectType({
     }
 });
 
+// Mutations
+const Mutation = new graphql.GraphQLObjectType({
+    name: 'Mutation',
+    fields: () => ({
+        createUser: {
+            type: UserType,
+            args: {
+                // id: {type: graphql.GraphQLID},
+                name: {type: graphql.GraphQLString},
+                age: {type: graphql.GraphQLInt},
+                job: {type: graphql.GraphQLString}
+            },
+            resolve(parent, args) {
+                let user = {
+                    name: args.name,
+                    age: args.age,
+                    job: args.job
+                };
+                return user;
+            }
+        },
+
+        createPost: {
+            type: PostType,
+            args: {
+                // id: {type: graphql.GraphQLID},
+                comment: {type: graphql.GraphQLString},
+                userId: {type: graphql.GraphQLID}
+            },
+            resolve(parent, args) {
+                let post = {
+                    comment: args.comment,
+                    userId: args.userId
+                };
+
+                return post;
+            }
+        },
+
+        createHobby: {
+            type: HobbyTypes,
+            args: {
+                // id : {type: graphql.GraphQLID},
+                title: {type: graphql.GraphQLString},
+                description: {type: graphql.GraphQLString},
+                userId: {type: graphql.GraphQLID}
+            },
+            resolve(parent, args) {
+                let hobby = {
+                    title: args.title,
+                    description: args.description,
+                    userId: args.userId
+                };
+
+                return hobby;
+            }
+        }
+    })
+})
+
 module.exports = new graphql.GraphQLSchema({
-    query: RootQuery
+    query: RootQuery,
+    mutation: Mutation
 });
