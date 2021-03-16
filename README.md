@@ -26,7 +26,7 @@ const UserType = new graphql.GraphQLObjectType({
     description: 'Description for UserType',
     fields: {
         id: {type: graphql.GraphQLID},
-        name: {type: graphql.GraphQLString},
+        name: {type:  graphql.GraphQLString},
         age: {type: graphql.GraphQLInt},
         job: {type: graphql.GraphQLString}
     }
