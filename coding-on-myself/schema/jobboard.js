@@ -1,37 +1,20 @@
 const graphql = require('graphql');
-const  _ = require('lodash');
+const JobItem = require('../models/JobItem');
+const User = require('../models/User');
 
 const JobItemType = new graphql.GraphQLObjectType({
     name: 'JobItemType',
     description: "JobItem Model",
     fields: {
-        id: {
-            type: graphql.GraphQLID
-        },
-        userId: {
-            type: graphql.GraphQLID
-        },
-        currentNumber: {
-            type: graphql.GraphQLInt
-        },
-        title: {
-            type: graphql.GraphQLString
-        },
-        companyName: {
-            type: graphql.GraphQLString
-        },
-        interview: {
-            type: graphql.GraphQLBoolean
-        },
-        offer: {
-            type: graphql.GraphQLBoolean
-        },
-        offerDetails: {
-            type: graphql.GraphQLString
-        },
-        jobLink: {
-            type: graphql.GraphQLString
-        }
+        id: { type: graphql.GraphQLID },
+        userId: { type: graphql.GraphQLID },
+        currentNumber: { type: graphql.GraphQLInt },
+        title: { type: graphql.GraphQLString },
+        companyName: { type: graphql.GraphQLString },
+        interview: { type: graphql.GraphQLBoolean },
+        offer: { type: graphql.GraphQLBoolean },
+        details: { type: graphql.GraphQLString },
+        jobLink: { type: graphql.GraphQLString }
     }
 });
 
@@ -45,13 +28,11 @@ const UserType = new graphql.GraphQLObjectType({
         passWord: {type: graphql.GraphQLString},
         jobList: {
             type: graphql.GraphQLList(JobItemType),
-            args: {
-                id: {type: graphql.GraphQLID}
-            },
-            resolve(parent, args) {
-                return _.find(dataFromDataBase, {
-                    userId: parent.id
+            async resolve(parent, args) {
+                const JobItems = await JobItem.find({
+                    userId: parent.id 
                 });
+                return JobItems
             }
         }
     }
@@ -65,29 +46,16 @@ const RootQuery = new graphql.GraphQLObjectType({
             args: {
                 id: { type: graphql.GraphQLID }
             },
-            resolve(parent, args) {
-                return _.find(dataFromDatabaseThatIdontHaveItYet, {
-                    id: parent.id
-                });
+            async resolve(parent, args) {
+                const user = await User.findById(args.id);
+                return user;
             }
         },
         Users: {
             type: graphql.GraphQLList(UserType),
-            resolve(parent, args) {
-                return UserDataFromDatabaseThatIDontHaveItRightNow;
-            }
-        },
-        JobListOfAUser: {
-            type: graphql.GraphQLList(JobItemType),
-            args: {
-                userId: {type: graphql.GraphQLID}
-            },
-            resolve(parent, args) {
-                const jobList = _.find(JobListItemData, {
-                    userId: args.userId
-                });
-
-                return jobList;
+            async resolve(parent, args) {
+                const users = await User.find();
+                return users;
             }
         }
     }
@@ -123,21 +91,61 @@ const Mutation = new graphql.GraphQLObjectType({
                 companyName: {type: graphql.GraphQLString},
                 interview: {type: graphql.GraphQLBoolean},
                 offer: {type: graphql.GraphQLBoolean},
-                offerDetails: {type: graphql.GraphQLString},
+                details: {type: graphql.GraphQLString},
                 jobLink: {type: graphql.GraphQLString}
             },
-            resolve(parent, args) {
-                let newJobItem = {
+            async resolve(parent, args) {
+                let newJobItem = await new JobItem({
+                    userId: args.userId,
                     currentNumber: args.currentNumber,
                     title: args.title,
                     companyName: args.companyName,
                     interview: args.interview,
                     offer: args.offer,
-                    offerDetails: args.offerDetails,
-                    jobLink: args.jobLink,
-                };
+                    details: args.details,
+                    jobLink: args.jobLink
+                });
 
+                await newJobItem.save();
                 return newJobItem;
+            }
+        },
+
+        updateAJobItem: {
+            type: JobItemType,
+            args: {
+                id: {type: graphql.GraphQLNonNull(graphql.GraphQLString)},
+                currentNumber: {type: graphql.GraphQLNonNull(graphql.GraphQLInt)},
+                title: {type: graphql.GraphQLNonNull(graphql.GraphQLString)},
+                companyName: {type: graphql.GraphQLNonNull(graphql.GraphQLString)},
+                interview: {type: graphql.GraphQLNonNull(graphql.GraphQLBoolean)},
+                offer: {type: graphql.GraphQLNonNull(graphql.GraphQLBoolean)},
+                details: {type: graphql.GraphQLNonNull(graphql.GraphQLString)},
+                jobLink: {type: graphql.GraphQLNonNull(graphql.GraphQLString)}
+            },
+            resolve(parent, args) {
+                const updatedJobItem = JobItem.findByIdAndUpdate(args.id, {
+                    currentNumber: args.currentNumber,
+                    title: args.title,
+                    companyName: args.companyName,
+                    interview: args.interview,
+                    offer: args.offer,
+                    details: args.details,
+                    jobLink: args.jobLink
+                }, {new: true});
+
+                return updatedJobItem;
+            }
+        },
+
+        deleteAJobItem: {
+            type: JobItemType,
+            args: {
+                id: {type: graphql.GraphQLNonNull(graphql.GraphQLID)}
+            },
+            resolve(parent, args) {
+                const deletedJobItem =  JobItem.findByIdAndDelete(args.id);
+                return deletedJobItem;
             }
         }
     }
