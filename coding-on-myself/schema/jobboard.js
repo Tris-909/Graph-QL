@@ -99,7 +99,6 @@ const Mutation = new graphql.GraphQLObjectType({
         createUser: {
             type: UserType,
             args: {
-                // id: {type: graphql.GraphQLID},
                 username: {type: graphql.GraphQLString},
                 email: {type: graphql.GraphQLString},
                 password: {type: graphql.GraphQLString}
@@ -118,7 +117,6 @@ const Mutation = new graphql.GraphQLObjectType({
         createAJobItem: {
             type: JobItemType,
             args: {
-                // id: {type: graphql.GraphQLID},
                 userId: {type: graphql.GraphQLID},
                 currentNumber: {type: graphql.GraphQLInt},
                 title: {type: graphql.GraphQLString},
@@ -130,7 +128,6 @@ const Mutation = new graphql.GraphQLObjectType({
             },
             resolve(parent, args) {
                 let newJobItem = {
-                    userId: args.userId,
                     currentNumber: args.currentNumber,
                     title: args.title,
                     companyName: args.companyName,

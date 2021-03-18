@@ -4,29 +4,6 @@ const User = require('../models/User');
 const Post = require('../models/Post');
 const Hobby = require('../models/Hobby');
 
-//Dummy Data
-let userData = [
-    {id: '1', name: 'Tri', age: 21, job: "Software Engineer"},
-    {id: '2', name: 'Fisher', age: 24, job: "Fishing Man"},
-    {id: '3', name: 'Jack', age: 34, job: "Lead Developer"},
-    {id: '4', name: 'Mona', age: 16, job: "Magician"},
-    {id: '5', name: 'Kila', age: 25, job: "Unemployed"}
-];
-let hobbyData = [
-    {id: '1', title: 'Playing VideoGame', description: "Playing on video games", userId: '1'},
-    {id: '2', title: 'Watching NetFlix', description: "See TV Movies", userId: '5'},
-    {id: '3', title: 'Playing Cards', description: "Playing Cards with friends", userId: '4'},
-    {id: '4', title: 'Go out to eat', description: "Eating with friends", userId: '2'},
-    {id: '5', title: 'Listen to music', description: "Listening for free music on youtube", userId: '3'}
-];
-let postData = [
-    {id: '1', comment: 'Comment 1', userId: '1'},
-    {id: '2', comment: 'Comment 2', userId: '2'},
-    {id: '3', comment: 'Comment 3', userId: '1'},
-    {id: '4', comment: 'Comment 4', userId: '4'},
-    {id: '5', comment: 'Comment 5', userId: '5'}
-];
-
 const UserType = new graphql.GraphQLObjectType({
     name: "UserType",
     description: "Model for User Schema",
@@ -37,18 +14,22 @@ const UserType = new graphql.GraphQLObjectType({
         job: {type: graphql.GraphQLString},
         posts: {
             type: graphql.GraphQLList(PostType),
-            resolve(parent, args) {
-                return _.filter(postData, {
+            async resolve(parent, args) {
+                const postArrays = Post.find({
                     userId: parent.id
                 });
+
+                return postArrays;
             }
         },
         hobbies: {
             type: graphql.GraphQLList(HobbyTypes),
             resolve(parent, args) {
-                return _.filter(hobbyData, {
-                    userId: parent.id
+                const hobbiesArray = Hobby.find({
+                    userId: parent.id 
                 });
+
+                return hobbiesArray;
             }
         }
     })
@@ -63,10 +44,13 @@ const HobbyTypes = new graphql.GraphQLObjectType({
         description: {type: graphql.GraphQLString},
         user: {
             type: UserType,
+            args: {
+                userId: {type: graphql.GraphQLID}
+            },
             resolve(parent, args) {
-                return _.find(userData, {
-                    id: parent.userId
-                });
+                const user = User.findById(args.userId);
+
+                return user;
             }
         }
     })
@@ -80,8 +64,13 @@ const PostType = new graphql.GraphQLObjectType({
         comment: {type: graphql.GraphQLString},
         user: {
             type: UserType,
+            args: {
+                userId: {type: graphql.GraphQLID}
+            },
             resolve(parent, args) {
-                return _.find(userData, { id: parent.userId })
+                const user = User.findById(args.userId);
+
+                return user;
             }
         }
     })
@@ -90,41 +79,46 @@ const PostType = new graphql.GraphQLObjectType({
 const RootQuery = new graphql.GraphQLObjectType({
     name: "RootQuery",
     fields: {
+
         user: {
             type: UserType,
             args: {
                 id: {type: graphql.GraphQLID}
             },
-            resolve(parent, args) {
-                return _.find(userData, {
-                    id: args.id
-                });
+            async resolve(parent, args) {
+                const user = await User.findById(args.id);
+
+                return user;
             }
         },
         users: {
             type: graphql.GraphQLList(UserType),
-            resolve(parent, args) {
-                return userData;
+            async resolve(parent, args) {
+                const users = await User.find();
+
+                return users;
             }
         },
-
-
-        
+       
         hobby: {
             type: HobbyTypes,
             args: {
                 id: {type: graphql.GraphQLID}
             },
-            resolve(parent, args) {
-                 return _.find(hobbyData, {
-                     id: args.id
-                 });
+            async resolve(parent, args) {
+                const hobby = await User.find({
+                    id: args.id
+                });
+
+                return hobby;
             }
         },
         hobbies: {
             type: graphql.GraphQLList(HobbyTypes),
-            resolve(parent, args) {
-                return hobbyData
+            async resolve(parent, args) {
+                const hobbies = await Hobby.find();
+
+                return hobbies;
             }
         },
 
@@ -134,16 +128,20 @@ const RootQuery = new graphql.GraphQLObjectType({
             args: {
                 id: {type: graphql.GraphQLID}
             },
-            resolve(parent, args) {
-                return _.find(postData, {
+            async resolve(parent, args) {
+                const post = await Post.findById({
                     id: args.id
                 });
+
+                return post;
             }
         },
         posts: {
             type: graphql.GraphQLList(PostType),
-            resolve(parent, args) {
-                return postData
+            async resolve(parent, args) {
+                const posts = await Post.find();
+
+                return posts;
             }
         }
     }
@@ -156,54 +154,53 @@ const Mutation = new graphql.GraphQLObjectType({
         createUser: {
             type: UserType,
             args: {
-                // id: {type: graphql.GraphQLID},
                 name: {type: graphql.GraphQLString},
                 age: {type: graphql.GraphQLInt},
                 job: {type: graphql.GraphQLString}
             },
-            resolve(parent, args) {
-                let user = {
+            async resolve(parent, args) {
+                let user = new User({
                     name: args.name,
                     age: args.age,
                     job: args.job
-                };
-                return user;
+                });
+                const newUser = await user.save();
+                return newUser;
             }
         },
 
         createPost: {
             type: PostType,
             args: {
-                // id: {type: graphql.GraphQLID},
                 comment: {type: graphql.GraphQLString},
                 userId: {type: graphql.GraphQLID}
             },
-            resolve(parent, args) {
-                let post = {
+            async resolve(parent, args) {
+                let post = new Post({
                     comment: args.comment,
                     userId: args.userId
-                };
+                });
 
-                return post;
+                const newPost = await post.save();
+                return newPost;
             }
         },
 
         createHobby: {
             type: HobbyTypes,
             args: {
-                // id : {type: graphql.GraphQLID},
                 title: {type: graphql.GraphQLString},
                 description: {type: graphql.GraphQLString},
                 userId: {type: graphql.GraphQLID}
             },
-            resolve(parent, args) {
-                let hobby = {
+            async resolve(parent, args) {
+                let hobby = new Hobby ({
                     title: args.title,
                     description: args.description,
                     userId: args.userId
-                };
-
-                return hobby;
+                });
+                const newHobby = await hobby.save();
+                return newHobby;
             }
         }
     })
