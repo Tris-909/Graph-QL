@@ -3,6 +3,7 @@ const _ = require('lodash');
 const User = require('../models/User');
 const Post = require('../models/Post');
 const Hobby = require('../models/Hobby');
+const { graphqlHTTP } = require('express-graphql');
 
 const UserType = new graphql.GraphQLObjectType({
     name: "UserType",
@@ -44,11 +45,8 @@ const HobbyTypes = new graphql.GraphQLObjectType({
         description: {type: graphql.GraphQLString},
         user: {
             type: UserType,
-            args: {
-                userId: {type: graphql.GraphQLID}
-            },
             resolve(parent, args) {
-                const user = User.findById(args.userId);
+                const user = User.findById(parent.userId);
 
                 return user;
             }
@@ -64,11 +62,9 @@ const PostType = new graphql.GraphQLObjectType({
         comment: {type: graphql.GraphQLString},
         user: {
             type: UserType,
-            args: {
-                userId: {type: graphql.GraphQLID}
-            },
+
             resolve(parent, args) {
-                const user = User.findById(args.userId);
+                const user = User.findById(parent.userId);
 
                 return user;
             }
@@ -106,9 +102,7 @@ const RootQuery = new graphql.GraphQLObjectType({
                 id: {type: graphql.GraphQLID}
             },
             async resolve(parent, args) {
-                const hobby = await User.find({
-                    id: args.id
-                });
+                const hobby = await Hobby.findById(args.id);
 
                 return hobby;
             }
@@ -154,8 +148,8 @@ const Mutation = new graphql.GraphQLObjectType({
         createUser: {
             type: UserType,
             args: {
-                name: {type: graphql.GraphQLString},
-                age: {type: graphql.GraphQLInt},
+                name: {type: graphql.GraphQLNonNull(graphql.GraphQLString)},
+                age: {type: graphql.GraphQLNonNull(graphql.GraphQLInt)},
                 job: {type: graphql.GraphQLString}
             },
             async resolve(parent, args) {
@@ -168,11 +162,40 @@ const Mutation = new graphql.GraphQLObjectType({
                 return newUser;
             }
         },
+        updateUser: {
+            type: UserType,
+            args: {
+                userId: {type: graphql.GraphQLNonNull(graphql.GraphQLID)},
+                newName: {type: graphql.GraphQLNonNull(graphql.GraphQLString)},
+                newAge: {type: graphql.GraphQLNonNull(graphql.GraphQLInt)},
+                newJob: {type: graphql.GraphQLNonNull(graphql.GraphQLString)}
+            },
+            async resolve(parent, args) {
+                return updatedUser = User.findByIdAndUpdate(args.userId, {
+                    $set: {
+                        name: args.newName,
+                        age: args.newAge,
+                        job: args.newJob 
+                    }
+                }, {new: true});
+            }
+        },
+        deleteUser: {
+            type: UserType,
+            args: {
+                id: {type: graphql.GraphQLNonNull(graphql.GraphQLString)}
+            },
+            async resolve(parent, args) {
+                const deletedUser = await User.findByIdAndDelete(args.id);
+                
+                return deletedUser;
+            }
+        },
 
         createPost: {
             type: PostType,
             args: {
-                comment: {type: graphql.GraphQLString},
+                comment: {type: graphql.GraphQLNonNull(graphql.GraphQLString)},
                 userId: {type: graphql.GraphQLID}
             },
             async resolve(parent, args) {
@@ -183,6 +206,35 @@ const Mutation = new graphql.GraphQLObjectType({
 
                 const newPost = await post.save();
                 return newPost;
+            }
+        },
+        updatePost: {
+            type: PostType,
+            args: {
+                id: {type: graphql.GraphQLNonNull(graphql.GraphQLID)},
+                comment: {type: graphql.GraphQLNonNull(graphql.GraphQLString)}
+            },
+            resolve(parent, args) {
+                return updatedPost = Post.findByIdAndUpdate(args.id, {
+                    $set: {
+                        comment: args.comment 
+                    }
+                }, {new: true});
+            }
+        },
+        deletePost: {
+            type: PostType,
+            args: {
+                id: {type: graphql.GraphQLNonNull(graphql.GraphQLID)}
+            },
+            resolve(parent, args) {
+                const deletedPost = Post.findByIdAndDelete(args.id);
+
+                if (!deletedPost) {
+                    throw new Error("Can't delete this post, Try Again");
+                }
+
+                return deletedPost;
             }
         },
 
@@ -202,7 +254,38 @@ const Mutation = new graphql.GraphQLObjectType({
                 const newHobby = await hobby.save();
                 return newHobby;
             }
-        }
+        },
+        updateHobby: {
+            type: HobbyTypes,
+            args: {
+                id: {type: graphql.GraphQLNonNull(graphql.GraphQLID)},
+                title: {type: graphql.GraphQLNonNull(graphql.GraphQLString)},
+                description: {type: graphql.GraphQLNonNull(graphql.GraphQLString)}
+            },
+            resolve(parent, args) {
+                return updatedHobby = Hobby.findByIdAndUpdate(args.id, {
+                    $set: {
+                        title: args.title,
+                        description: args.description  
+                    }
+                }, {new: true});
+            }
+        },
+        deleteHobby: {
+            type: HobbyTypes,
+            args: {
+                id: {type: graphql.GraphQLNonNull(graphql.GraphQLID)}
+            },
+            resolve(parent, args) {
+                const deletedHobby = Hobby.findByIdAndDelete(args.id);
+
+                if (!deletedPost) {
+                    throw new Error("Can't delete this Hobby, Try Again");
+                }
+
+                return deletedHobby;
+            }
+        },
     })
 })
 
