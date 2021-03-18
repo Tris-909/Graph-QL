@@ -1,9 +1,7 @@
 const graphql = require('graphql');
-const _ = require('lodash');
 const User = require('../models/User');
 const Post = require('../models/Post');
 const Hobby = require('../models/Hobby');
-const { graphqlHTTP } = require('express-graphql');
 
 const UserType = new graphql.GraphQLObjectType({
     name: "UserType",
@@ -15,7 +13,7 @@ const UserType = new graphql.GraphQLObjectType({
         job: {type: graphql.GraphQLString},
         posts: {
             type: graphql.GraphQLList(PostType),
-            async resolve(parent, args) {
+            resolve(parent, args) {
                 const postArrays = Post.find({
                     userId: parent.id
                 });
@@ -89,8 +87,8 @@ const RootQuery = new graphql.GraphQLObjectType({
         },
         users: {
             type: graphql.GraphQLList(UserType),
-            async resolve(parent, args) {
-                const users = await User.find();
+            resolve(parent, args) {
+                const users = User.find();
 
                 return users;
             }
